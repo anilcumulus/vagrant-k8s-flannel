@@ -1,0 +1,53 @@
+#!/bin/bash
+
+echo 'nameserver 8.8.8.8' > /etc/resolv.conf
+
+echo 'Add docker repo'
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+echo 'Add kuber repo'
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+add-apt-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+echo 'Install packages'
+apt-get update
+apt-get -y --allow-unauthenticated install docker-ce=17.12.1~ce-0~ubuntu kubeadm=1.9.2-00 kubelet=1.9.2-00 bridge-utils
+
+rm -f /home/vagrant/.kube/config
+
+iptables -t nat -F
+iptables -F 
+iptables -X
+
+echo 'Create cbr0 bridge'
+ip link set docker0 down
+ip link delete docker0
+brctl addbr cbr0
+cat <<EOF >/etc/docker/daemon.json
+{
+	"bridge": "cbr0",
+	"ip-masq": false,
+	"iptables": false
+}
+EOF
+
+echo 'Update kubeadm.conf and restart kubelet'
+cat <<EOF > /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+[Service]
+Environment="KUBELET_KUBECONFIG_ARGS=--bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf --kubeconfig=/etc/kubernetes/kubelet.conf"
+Environment="KUBELET_SYSTEM_PODS_ARGS=--pod-manifest-path=/etc/kubernetes/manifests --allow-privileged=true"
+Environment="KUBELET_NETWORK_ARGS=--network-plugin=cni --cni-conf-dir=/etc/cni/net.d --cni-bin-dir=/opt/cni/bin"
+Environment="KUBELET_DNS_ARGS=--cluster-dns=10.96.0.10 --cluster-domain=cluster.local"
+Environment="KUBELET_AUTHZ_ARGS=--authorization-mode=Webhook --client-ca-file=/etc/kubernetes/pki/ca.crt"
+Environment="KUBELET_CADVISOR_ARGS=--cadvisor-port=0"
+Environment="KUBELET_CERTIFICATE_ARGS=--rotate-certificates=true --cert-dir=/var/lib/kubelet/pki"
+Environment="KUBELET_NODE_IP_ARGS=--node-ip=172.16.1.102"
+ExecStart=
+ExecStart=/usr/bin/kubelet \$KUBELET_KUBECONFIG_ARGS \$KUBELET_SYSTEM_PODS_ARGS \$KUBELET_NETWORK_ARGS \$KUBELET_DNS_ARGS \$KUBELET_AUTHZ_ARGS \$KUBELET_CADVISOR_ARGS \$KUBELET_CERTIFICATE_ARGS \$KUBELET_EXTRA_ARGS \$KUBELET_NODE_IP_ARGS
+EOF
+
+systemctl daemon-reload
+systemctl restart kubelet.service
+
+echo 'Join the cluster master'
+kubeadm join --token anilre.soopersecrethere 172.16.1.100:6443 --discovery-token-unsafe-skip-ca-verification
+

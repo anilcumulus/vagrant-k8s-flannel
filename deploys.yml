@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ubuntu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ubuntu
+  template:
+    metadata:
+      labels:
+        app: ubuntu
+    spec:
+      containers:
+      - name: ubuntu
+        image: anilkreddyr/ubuntu_ping
+      nodeSelector:
+        kubernetes.io/hostname: worker01
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ubuntu2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ubuntu2
+  template:
+    metadata:
+      labels:
+        app: ubuntu2
+    spec:
+      containers:
+      - name: ubuntu2
+        image: anilkreddyr/ubuntu_ping
+      nodeSelector:
+        kubernetes.io/hostname: worker02
