@@ -10,3 +10,5 @@ master
 |
 |_worker01
 ```
+
+I've used [this github project](https://github.com/joeldavis84/vagrant-k8s) as a reference.. Thanks Joeldavis84. 
