@@ -17,9 +17,6 @@ Vagrant.configure('2') do |config|
     master.vm.provision "file", source: "deploys.yml", destination: "/home/vagrant/deploys.yml"
     # Run CNI flannel manifest file.
     master.vm.provision :shell, inline: 'kubectl apply -f /home/vagrant/kube-flannel.yml', run:"always", privileged: false
-    # Run redis and expose the service.
-    master.vm.provision :shell, inline: 'kubectl run redis --image=redis', run:"always", privileged: false
-    master.vm.provision :shell, inline: 'kubectl expose deployment redis --external-ip=172.16.1.100 --port=6379 --target-port=6379', run:"always", privileged: false
     # Run manifest file with 2 ub containers.
     master.vm.provision :shell, inline: 'kubectl create -f /home/vagrant/deploys.yml', run:"always", privileged: false
   end

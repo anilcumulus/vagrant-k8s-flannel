@@ -54,7 +54,7 @@ metadata:
 data:
   cni-conf.json: |
     {
-      "name": "cbr0",
+      "name": "cni0",
       "plugins": [
         {
           "type": "flannel",

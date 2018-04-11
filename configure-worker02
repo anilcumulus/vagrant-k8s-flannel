@@ -18,17 +18,9 @@ iptables -t nat -F
 iptables -F 
 iptables -X
 
-echo 'Create cbr0 bridge'
+echo 'Delete docker0 bridge'
 ip link set docker0 down
 ip link delete docker0
-brctl addbr cbr0
-cat <<EOF >/etc/docker/daemon.json
-{
-	"bridge": "cbr0",
-	"ip-masq": false,
-	"iptables": false
-}
-EOF
 
 echo 'Update kubeadm.conf and restart kubelet'
 cat <<EOF > /etc/systemd/system/kubelet.service.d/10-kubeadm.conf

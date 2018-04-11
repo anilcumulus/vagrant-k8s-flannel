@@ -18,17 +18,9 @@ iptables -t nat -F
 iptables -F 
 iptables -X
 
-echo 'Create cbr0 bridge'
+echo 'Delete the docker bridge'
 ip link set docker0 down
 ip link delete docker0
-brctl addbr cbr0
-cat <<EOF >/etc/docker/daemon.json
-{
-   "bridge": "cbr0",
-   "ip-masq": false,
-   "iptables": false
-}
-EOF
 
 echo 'Start the cluster'
 kubeadm --apiserver-advertise-address=172.16.1.100 --pod-network-cidr=10.244.0.0/16 --token=anilre.soopersecrethere init
