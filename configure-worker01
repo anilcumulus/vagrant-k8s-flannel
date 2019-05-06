@@ -10,7 +10,7 @@ curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 add-apt-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
 echo 'Install packages'
 apt-get update
-apt-get -y --allow-unauthenticated install docker-ce=17.12.1~ce-0~ubuntu kubeadm=1.9.2-00 kubelet=1.9.2-00 bridge-utils
+apt-get -y --allow-unauthenticated install docker-ce=17.12.1~ce-0~ubuntu kubeadm=1.9.2-00 kubelet=1.9.2-00 kubernetes-cni=0.6.0-00 bridge-utils
 
 rm -f /home/vagrant/.kube/config
 
