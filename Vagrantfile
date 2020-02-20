@@ -1,5 +1,5 @@
 Vagrant.configure('2') do |config|
-  config.vm.box = 'ubuntu/xenial64'
+  config.vm.box = 'ubuntu/bionic64'
   ENV['VAGRANT_DEFAULT_PROVIDER'] = 'virtualbox'
   config.vm.provider "virtualbox" do |vb| 
     vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
