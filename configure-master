@@ -1,7 +1,5 @@
 #!/bin/bash
 
-echo 'nameserver 8.8.8.8' > /etc/resolv.conf
-
 echo 'Add docker repo'
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
@@ -22,6 +20,29 @@ echo 'Delete the docker bridge'
 ip link set docker0 down
 ip link delete docker0
 
+echo 'nameserver 8.8.8.8' > /etc/resolv.conf
+echo '172.16.1.100   master' >> /etc/hosts
+echo '172.16.1.101   worker01' >> /etc/hosts
+echo '172.16.1.102   worker02' >> /etc/hosts
+
+cat <<EOF > /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+# Note: This dropin only works with kubeadm and kubelet v1.11+
+[Service]
+Environment="KUBELET_EXTRA_ARGS=--node-ip=172.16.1.100"
+Environment="KUBELET_KUBECONFIG_ARGS=--bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf --kubeconfig=/etc/kubernetes/kubelet.conf"
+Environment="KUBELET_CONFIG_ARGS=--config=/var/lib/kubelet/config.yaml"
+# This is a file that "kubeadm init" and "kubeadm join" generates at runtime, populating the KUBELET_KUBEADM_ARGS variable dynamically
+EnvironmentFile=-/var/lib/kubelet/kubeadm-flags.env
+# This is a file that the user can use for overrides of the kubelet args as a last resort. Preferably, the user should use
+# the .NodeRegistration.KubeletExtraArgs object in the configuration files instead. KUBELET_EXTRA_ARGS should be sourced from this file.
+EnvironmentFile=-/etc/default/kubelet
+ExecStart=
+ExecStart=/usr/bin/kubelet \$KUBELET_KUBECONFIG_ARGS \$KUBELET_CONFIG_ARGS \$KUBELET_KUBEADM_ARGS \$KUBELET_EXTRA_ARGS
+EOF
+
+systemctl daemon-reload
+systemctl restart kubelet.service
+
 echo 'Start the cluster'
 kubeadm --apiserver-advertise-address=172.16.1.100 --pod-network-cidr=10.244.0.0/16 --token=anilre.soopersecrethere init
 mkdir -p /home/vagrant/.kube
@@ -29,19 +50,4 @@ cp /etc/kubernetes/admin.conf /home/vagrant/.kube/config
 chmod 777 /home/vagrant/.kube/config
 chown 1000:1000 /home/vagrant/.kube/config
 
-echo 'Update kubeadm.conf and restart kubelet'
-cat <<EOF > /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
-[Service]
-Environment="KUBELET_KUBECONFIG_ARGS=--bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf --kubeconfig=/etc/kubernetes/kubelet.conf"
-Environment="KUBELET_SYSTEM_PODS_ARGS=--pod-manifest-path=/etc/kubernetes/manifests"
-Environment="KUBELET_NETWORK_ARGS=--network-plugin=cni --cni-conf-dir=/etc/cni/net.d --cni-bin-dir=/opt/cni/bin"
-Environment="KUBELET_DNS_ARGS=--cluster-dns=10.96.0.10 --cluster-domain=cluster.local"
-Environment="KUBELET_AUTHZ_ARGS=--authorization-mode=Webhook --client-ca-file=/etc/kubernetes/pki/ca.crt"
-Environment="KUBELET_CERTIFICATE_ARGS=--rotate-certificates=true --cert-dir=/var/lib/kubelet/pki"
-Environment="KUBELET_NODE_IP_ARGS=--node-ip=172.16.1.100"
-ExecStart=
-ExecStart=/usr/bin/kubelet \$KUBELET_KUBECONFIG_ARGS \$KUBELET_SYSTEM_PODS_ARGS \$KUBELET_NETWORK_ARGS \$KUBELET_DNS_ARGS \$KUBELET_AUTHZ_ARGS \$KUBELET_CERTIFICATE_ARGS \$KUBELET_EXTRA_ARGS \$KUBELET_NODE_IP_ARGS
-EOF
 
-systemctl daemon-reload
-systemctl restart kubelet.service
