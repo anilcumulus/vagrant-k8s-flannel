@@ -37,7 +37,7 @@ Use the token below:
 
 " >> /home/vagrant/token
 MSG
-    master.vm.provision "shell", inline: $message, run: "always"
+    master.vm.provision "shell", inline: $message, run: "always", privileged: false
     master.vm.provision :shell, inline: 'kubectl -n kube-system describe $(kubectl -n kube-system get secret  -oname | grep admin) | grep token: | awk \'{print $2}\' >> /home/vagrant/token', run:"always", privileged: false
   end
 
