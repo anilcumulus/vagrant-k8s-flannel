@@ -2,10 +2,10 @@
 
 echo 'Add docker repo'
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
-add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 echo 'Add kuber repo'
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-add-apt-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable" >> /etc/apt/sources.list
+echo "deb [arch=amd64] http://apt.kubernetes.io/ kubernetes-xenial main" >> /etc/apt/sources.list
 echo 'Install packages'
 apt-get update
 apt-get -y --allow-unauthenticated install docker-ce=5:18.09.9~3-0~ubuntu-bionic docker-ce-cli=5:18.09.9~3-0~ubuntu-bionic kubeadm=1.16.2-00 kubelet=1.16.2-00 kubernetes-cni=0.7.5-00 bridge-utils
