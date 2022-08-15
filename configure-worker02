@@ -21,15 +21,15 @@ ip link set docker0 down
 ip link delete docker0
 
 echo 'nameserver 8.8.8.8' > /etc/resolv_up.conf
-echo '172.16.1.100   master' >> /etc/hosts
-echo '172.16.1.101   worker01' >> /etc/hosts
-echo '172.16.1.102   worker02' >> /etc/hosts
+echo '192.168.56.100   master' >> /etc/hosts
+echo '192.168.56.101   worker01' >> /etc/hosts
+echo '192.168.56.102   worker02' >> /etc/hosts
 
 echo 'Update kubeadm.conf and restart kubelet'
 cat <<EOF > /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 # Note: This dropin only works with kubeadm and kubelet v1.11+
 [Service]
-Environment="KUBELET_EXTRA_ARGS=--node-ip=172.16.1.102"
+Environment="KUBELET_EXTRA_ARGS=--node-ip=192.168.56.102"
 Environment="KUBELET_KUBECONFIG_ARGS=--bootstrap-kubeconfig=/etc/kubernetes/bootstrap-kubelet.conf --kubeconfig=/etc/kubernetes/kubelet.conf"
 Environment="KUBELET_CONFIG_ARGS=--config=/var/lib/kubelet/config.yaml"
 # This is a file that "kubeadm init" and "kubeadm join" generates at runtime, populating the KUBELET_KUBEADM_ARGS variable dynamically
@@ -45,5 +45,5 @@ systemctl daemon-reload
 systemctl restart kubelet.service
 
 echo 'Join the cluster master'
-kubeadm join --token anilre.soopersecrethere 172.16.1.100:6443 --discovery-token-unsafe-skip-ca-verification
+kubeadm join --token anilre.soopersecrethere 192.168.56.100:6443 --discovery-token-unsafe-skip-ca-verification
 

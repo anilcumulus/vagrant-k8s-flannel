@@ -11,7 +11,7 @@ Vagrant.configure('2') do |config|
   config.vm.define 'master' do |master|
     master.vm.hostname = 'master'
     master.vm.provision :shell, path: 'configure-master'
-    master.vm.network "private_network", ip: '172.16.1.100'
+    master.vm.network "private_network", ip: '192.168.56.100'
     config.vm.network "forwarded_port",
         guest: 8001,
         host: 8001,
@@ -44,17 +44,17 @@ MSG
   config.vm.define 'worker01' do |worker|
     worker.vm.provision :shell, path: 'configure-worker01'
     worker.vm.hostname = 'worker01'
-    worker.vm.network "private_network", ip: '172.16.1.101'
+    worker.vm.network "private_network", ip: '192.168.56.101'
   end
 
   config.vm.define 'worker02' do |worker|
     worker.vm.provision :shell, path: 'configure-worker02'
     worker.vm.hostname = 'worker02'
-    worker.vm.network "private_network", ip: '172.16.1.102'
+    worker.vm.network "private_network", ip: '192.168.56.102'
 
     worker.trigger.after :up do |trigger|
        trigger.run = {
-          inline: "ssh -i .vagrant/machines/master/virtualbox/private_key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no vagrant@172.16.1.100 cat /home/vagrant/token && screen -d -m kubectl proxy --address=0.0.0.0"
+          inline: "ssh -i .vagrant/machines/master/virtualbox/private_key -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no vagrant@192.168.56.100 cat /home/vagrant/token && screen -d -m kubectl proxy --address=0.0.0.0"
        }
     end
   end
